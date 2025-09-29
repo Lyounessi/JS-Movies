@@ -1,5 +1,15 @@
 const global = {
-    currentPage: window.location.pathname
+    currentPage: window.location.pathname,
+    search : {
+        term : "",
+        type : "",
+        page : 1,
+        totalPages : 1
+    },
+    api: {
+        apiKey: 'fb36391bf7f0872322162fb66d71a790',
+        apiUrl: 'https://api.themoviedb.org/3/',
+    }
 }
 
 //highlight active link
@@ -179,6 +189,48 @@ function displayBackgroundImage(type, backgroundPath) {
     }
 }
 
+//sarch movies/shows
+async function search() {
+    const queryString = window.location.search;// get the url query string
+    const urlParams = new URLSearchParams(queryString);//parse the query string
+    global.search.term =   urlParams.get('search-term');
+    global.search.type = urlParams.get('type');
+
+    if (global.search.term !== null && global.search.term !== '') {
+        const { results, totalPages, page } = await searchAPIData();
+        if (results.length === 0) {
+            showAlert('No results found');
+            return;
+        }
+
+        displaySearchResults(results);
+
+        document.querySelector('#search-term').value = "";
+
+    }else {
+        showAlert('Please enter a search term');
+    }
+}
+
+function displaySearchResults(results) {
+    results.forEach(result => {
+        const div = document.createElement('div');
+        div.classList.add('card');
+        div.innerHTML = `
+            <a href="movie-details.html?id=${result.id}">    
+            ${
+                result.poster_path ? `<img src="https://image.tmdb.org/t/p/w500${result.poster_path}" class="card-img-top" alt="${global.search.type === 'movie' ? result.title : result.name}">` 
+                : `<img src="images/no-image.jpg" class="card-img-top" alt="${global.search.type === 'movie' ? result.title : result.name}">`
+            }
+            </a>
+            <div class="card-body">
+                <h5 class="card-title">${global.search.type === 'movie' ? result.title : result.name}</h5>
+                <p class="card-text">Release Date: ${global.search.type === 'movie' ? result.release_date : result.first_air_date}</p>
+            </div>
+        `;
+        document.querySelector('#search-results').appendChild(div);
+    });
+}
 
 
 // Fetch data from API
@@ -192,6 +244,17 @@ async function fetchData(endpoint) {
     return data;
 }
 
+//make request to search 
+async function searchAPIData() {
+    const API_KEY = global.api.apiKey;
+    const API_URL = global.api.apiUrl;
+    showSpinner();
+    const response = await fetch(`${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}`);
+    const data = await response.json();
+    hideSpinner();
+    return data;
+    
+}
 
 function  addCommasNumber(number) {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -241,6 +304,17 @@ function initSwiper() {
     });
 }
 
+//Show Alert
+
+function showAlert(message, className = 'error') {
+    const alertEl = document.createElement('div');
+    alertEl.classList.add('alert', className);
+    alertEl.appendChild(document.createTextNode(message));
+    document.querySelector('#alert').appendChild(alertEl);
+    setTimeout(() => alertEl.remove(), 3000);
+}
+
+
 //init app
 function init() {
     switch (global.currentPage) {
@@ -259,7 +333,7 @@ function init() {
             displayShowDetails();
             break;
         case '/search.html':
-            console.log('Search Page');
+            search();
             break;
     }
     highlightActiveLink();

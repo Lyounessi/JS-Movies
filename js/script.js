@@ -58,6 +58,10 @@ async function displayPopularShows() {
 async function displayMoviesDetails() {
     const movieId = window.location.search.split('=')[1];
     const movie = await fetchData(`movie/${movieId}`);
+    //overlay background
+    displayBackgroundImage('movie', movie.backdrop_path);
+    //details
+
     const div = document.createElement('div');
     div.innerHTML = `
     <div class="details-top">
@@ -109,6 +113,25 @@ function hideSpinner() {
 }
 
 
+function displayBackgroundImage(type, backgroundPath) {
+    const overlayDiv = document.createElement('div');
+    overlayDiv.style.backgroundImage = `url(https://image.tmdb.org/t/p/original${backgroundPath})`;
+    overlayDiv.style.backgroundSize = 'cover';
+    overlayDiv.style.backgroundPosition = 'center';
+    overlayDiv.style.backgroundRepeat = 'no-repeat';
+    overlayDiv.style.height = '100vh';
+    overlayDiv.style.width = '100vw';
+    overlayDiv.style.position = 'absolute';
+    overlayDiv.style.top = '0';
+    overlayDiv.style.left = '0';
+    overlayDiv.style.zIndex = '-1';
+    overlayDiv.style.opacity = '0.1';
+    if (type === 'movie') {
+        document.querySelector('#movie-details').appendChild(overlayDiv);
+    } else if (type === 'tv') {
+        document.querySelector('#tv-details').appendChild(overlayDiv);
+    }
+}
 
 // Fetch data from API
 async function fetchData(endpoint) {

@@ -51,7 +51,6 @@ async function displayPopularShows() {
             </div>
         `;
         document.querySelector('#popular-shows').appendChild(div);
-        console.log(document.querySelector('#popular-shows'));
     });
 }
 
@@ -104,8 +103,6 @@ async function displayMoviesDetails() {
 }
 
 async function displayShowDetails() {
-    console.log(document.querySelector('#show-details'));
-
     const showId = window.location.search.split('=')[1];
     const show = await fetchData(`tv/${showId}`);
     //overlay background
@@ -182,6 +179,8 @@ function displayBackgroundImage(type, backgroundPath) {
     }
 }
 
+
+
 // Fetch data from API
 async function fetchData(endpoint) {
     const apiKey = 'fb36391bf7f0872322162fb66d71a790';
@@ -198,12 +197,57 @@ function  addCommasNumber(number) {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
+async function displaySwiper() {
+    const { results } = await fetchData('movie/now_playing');
+    results.forEach(movie => {
+        const div = document.createElement('div');
+        div.classList.add('swiper-slide');
+        div.innerHTML = `
+            <a href="movie-details.html?id=${movie.id}">
+              <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="${movie.title}" />
+            </a>
+            <h4 class="swiper-rating">
+              <i class="fas fa-star text-secondary"></i> ${movie.vote_average.toFixed(1)} / 10
+            </h4>
+          
+        `;
+        document.querySelector('.swiper-wrapper').appendChild(div);
+        initSwiper();
+    });
+
+}
+
+function initSwiper() {
+    const swiper = new Swiper('.swiper', {
+        slidesPerView: 1,
+        spaceBetween: 30,
+        freeMode: true,
+        loop: true,
+        autoplay: {
+            delay: 2000,
+            disableOnInteraction: false,
+        },
+        breakpoints: {
+            500: {
+                slidesPerView: 2,
+            },
+            768: {
+                slidesPerView: 3,
+            },
+            1024: {
+                slidesPerView: 3,
+            },
+        },
+    });
+}
+
 //init app
 function init() {
     switch (global.currentPage) {
         case '/':
         case '/index.html':
-            console.log('Home Page');
+            displaySwiper();
+            displayPopularMovies();
             break;
         case '/shows.html':
             displayPopularShows();
@@ -219,7 +263,7 @@ function init() {
             break;
     }
     highlightActiveLink();
-    displayPopularMovies();
+    
 }
 
 document.addEventListener('DOMContentLoaded', init);
